@@ -9,15 +9,11 @@ cd TodoApp
 
 The final folder structure will be like this:
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/e0d97c1f-7341-4e4b-8e25-cd76424c988a/Untitled.png)
+![Alt text](image-1.png)
 
 The final Images of the application
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/78470663-9e69-4f81-ae15-46df0d52ba86/Untitled.png)
-
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/59d174cd-d1dc-45c1-a31c-f9f45d5a1a0a/Untitled.png)
-
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a0598518-d96e-41f1-b2b7-918f1625ac9e/Untitled.png)
+![Alt text](image.png)
 
 ## Step 2: Install dependencies
 
