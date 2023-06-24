@@ -42,7 +42,7 @@ const db = SQLite.openDatabase(
   database_size
 );
 
-export const initDatabase = () => {
+const initDatabase = () => {
   db.transaction((tx) => {
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS todos (
@@ -57,7 +57,65 @@ export const initDatabase = () => {
   });
 };
 
-export default db;
+const getTodos = () => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM todos",
+        [],
+        (_, { rows }) => {
+          resolve(rows._array);
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
+const deleteTodo = (id) => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "DELETE FROM todos WHERE id = ?",
+        [id],
+        () => {
+          resolve();
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
+const addTodo = (title, description) => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "INSERT INTO todos (title, description) VALUES (?, ?)",
+        [title, description],
+        (_, { insertId }) => {
+          resolve(insertId);
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
+const Database = {
+  initDatabase,
+  addTodo,
+  getTodos,
+  deleteTodo,
+};
+
+export default Database;
 ```
 
 ## Step 4: Set up navigation
@@ -68,16 +126,15 @@ Create a new file named **`App.js`** in the root of your project and replace the
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import React, { useEffect } from "react";
-import { initDatabase } from "./Database";
+import Database from "./Database";
 import DetailScreen from "./screens/DetailScreen";
 import EntryScreen from "./screens/EntryScreen";
 import HomeScreen from "./screens/HomeScreen";
-
 const Stack = createStackNavigator();
 
 const App = () => {
   useEffect(() => {
-    initDatabase();
+    Database.initDatabase();
   }, []);
 
   return (
@@ -112,31 +169,29 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import db from "../Database";
+import Database from "../Database";
 
 const HomeScreen = ({ navigation }) => {
   const [todos, setTodos] = useState([]);
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    const fetchData = () => {
-      db.transaction((tx) => {
-        tx.executeSql("SELECT * FROM todos;", [], (_, { rows }) => {
-          setTodos(rows._array);
-        });
-      });
+    const fetchData = async () => {
+      try {
+        const data = await Database.getTodos();
+        setTodos(data);
+      } catch (error) {
+        console.log("Error fetching todos", error);
+      }
     };
 
     fetchData();
   }, [isFocused]);
 
-  const handleDeleteTodo = (id) => {
-    db.transaction((tx) => {
-      tx.executeSql("DELETE FROM todos WHERE id = ?;", [id], () => {
-        const updatedTodos = todos.filter((todo) => todo.id !== id);
-        setTodos(updatedTodos);
-      });
-    });
+  const handleDeleteTodo = async (id) => {
+    await Database.deleteTodo(id);
+    const data = await Database.getTodos();
+    setTodos(data);
   };
 
   const renderTodoItem = ({ item }) => (
@@ -212,28 +267,26 @@ In **`EntryScreen.js`**, add the following code:
 ```jsx
 import React, { useState } from "react";
 import {
+  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import db from "../Database";
+import Database from "../Database";
 
 const EntryScreen = ({ navigation }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const handleAddTodo = () => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "INSERT INTO todos (title, description) VALUES (?, ?);",
-        [title, description],
-        () => {
-          navigation.navigate("Home");
-        }
-      );
-    });
+  const handleAddTodo = async () => {
+    if (!title || !description) {
+      Alert.alert("Error", "Please enter title and description");
+      return;
+    }
+    await Database.addTodo(title, description);
+    navigation.goBack();
   };
 
   return (
