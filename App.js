@@ -1,16 +1,15 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import React, { useEffect } from "react";
-import { initDatabase } from "./Database";
+import Database from "./Database";
 import DetailScreen from "./screens/DetailScreen";
 import EntryScreen from "./screens/EntryScreen";
 import HomeScreen from "./screens/HomeScreen";
-
 const Stack = createStackNavigator();
 
 const App = () => {
   useEffect(() => {
-    initDatabase();
+    Database.initDatabase();
   }, []);
 
   return (

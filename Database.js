@@ -12,7 +12,7 @@ const db = SQLite.openDatabase(
   database_size
 );
 
-export const initDatabase = () => {
+const initDatabase = () => {
   db.transaction((tx) => {
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS todos (
@@ -27,4 +27,62 @@ export const initDatabase = () => {
   });
 };
 
-export default db;
+const getTodos = () => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM todos",
+        [],
+        (_, { rows }) => {
+          resolve(rows._array);
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
+const deleteTodo = (id) => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "DELETE FROM todos WHERE id = ?",
+        [id],
+        () => {
+          resolve();
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
+const addTodo = (title, description) => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "INSERT INTO todos (title, description) VALUES (?, ?)",
+        [title, description],
+        (_, { insertId }) => {
+          resolve(insertId);
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
+const Database = {
+  initDatabase,
+  addTodo,
+  getTodos,
+  deleteTodo,
+};
+
+export default Database;

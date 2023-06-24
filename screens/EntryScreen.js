@@ -1,27 +1,25 @@
 import React, { useState } from "react";
 import {
+  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import db from "../Database";
+import Database from "../Database";
 
 const EntryScreen = ({ navigation }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const handleAddTodo = () => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "INSERT INTO todos (title, description) VALUES (?, ?);",
-        [title, description],
-        () => {
-          navigation.navigate("Home");
-        }
-      );
-    });
+  const handleAddTodo = async () => {
+    if (!title || !description) {
+      Alert.alert("Error", "Please enter title and description");
+      return;
+    }
+    await Database.addTodo(title, description);
+    navigation.goBack();
   };
 
   return (

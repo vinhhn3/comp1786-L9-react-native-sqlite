@@ -7,31 +7,29 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import db from "../Database";
+import Database from "../Database";
 
 const HomeScreen = ({ navigation }) => {
   const [todos, setTodos] = useState([]);
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    const fetchData = () => {
-      db.transaction((tx) => {
-        tx.executeSql("SELECT * FROM todos;", [], (_, { rows }) => {
-          setTodos(rows._array);
-        });
-      });
+    const fetchData = async () => {
+      try {
+        const data = await Database.getTodos();
+        setTodos(data);
+      } catch (error) {
+        console.log("Error fetching todos", error);
+      }
     };
 
     fetchData();
   }, [isFocused]);
 
-  const handleDeleteTodo = (id) => {
-    db.transaction((tx) => {
-      tx.executeSql("DELETE FROM todos WHERE id = ?;", [id], () => {
-        const updatedTodos = todos.filter((todo) => todo.id !== id);
-        setTodos(updatedTodos);
-      });
-    });
+  const handleDeleteTodo = async (id) => {
+    await Database.deleteTodo(id);
+    const data = await Database.getTodos();
+    setTodos(data);
   };
 
   const renderTodoItem = ({ item }) => (
