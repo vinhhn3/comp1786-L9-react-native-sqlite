@@ -15,6 +15,10 @@ The final Images of the application
 
 ![Alt text](image.png)
 
+The following diagram shows how the application structure works with SQLite database and the responsibility of each file
+
+![Alt text](image-2.png)
+
 ## Step 2: Install dependencies
 
 Install the required dependencies for SQLite and navigation:
