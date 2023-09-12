@@ -5,6 +5,7 @@ import Database from "./Database";
 import DetailScreen from "./screens/DetailScreen";
 import EntryScreen from "./screens/EntryScreen";
 import HomeScreen from "./screens/HomeScreen";
+import SearchScreen from "./screens/SearchScreen";
 const Stack = createStackNavigator();
 
 const App = () => {
@@ -18,6 +19,7 @@ const App = () => {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Entry" component={EntryScreen} />
         <Stack.Screen name="Detail" component={DetailScreen} />
+        <Stack.Screen name="Search" component={SearchScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

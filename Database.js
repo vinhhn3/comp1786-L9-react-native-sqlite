@@ -78,11 +78,16 @@ const addTodo = (title, description) => {
   });
 };
 
+const getTodosByTitle = () => {
+  // TODO: complete the exercise
+};
+
 const Database = {
   initDatabase,
   addTodo,
   getTodos,
   deleteTodo,
+  getTodosByTitle,
 };
 
 export default Database;
