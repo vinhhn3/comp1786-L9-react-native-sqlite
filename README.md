@@ -394,3 +394,5 @@ export default DetailScreen;
 Study the documentation of React Bottom Tab
 
 https://reactnavigation.org/docs/bottom-tab-navigator
+
+https://reactnavigation.org/docs/nesting-navigators/
