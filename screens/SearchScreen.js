@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 
 const SearchScreen = () => {
-  // TODO: Complete the exercise
+  // TODO: Implement Search screen
 
   return (
     <View>

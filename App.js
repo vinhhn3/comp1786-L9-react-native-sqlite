@@ -9,6 +9,7 @@ import SearchScreen from "./screens/SearchScreen";
 const Stack = createStackNavigator();
 
 const App = () => {
+  // TODO: Implement Bottom Tab navigation
   useEffect(() => {
     Database.initDatabase();
   }, []);

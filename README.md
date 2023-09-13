@@ -384,3 +384,13 @@ const styles = StyleSheet.create({
 
 export default DetailScreen;
 ```
+
+## Exercise
+
+![Alt text](exercise.png)
+
+### Hint
+
+Study the documentation of React Bottom Tab
+
+https://reactnavigation.org/docs/bottom-tab-navigator
