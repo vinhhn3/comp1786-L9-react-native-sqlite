@@ -3,7 +3,7 @@
 First, create a new React Native project using the React Native CLI:
 
 ```
-npx create-expo-app TodoApp
+npx create-expo-app TodoApp --template blank
 cd TodoApp
 ```
 
