@@ -1,4 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
@@ -7,29 +8,38 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Database from "../Database";
 
 const HomeScreen = ({ navigation }) => {
   const [todos, setTodos] = useState([]);
   const isFocused = useIsFocused();
+  const db = useSQLiteContext();
+
+  const getTodos = async () => {
+    try {
+      const allTodos = await db.getAllAsync("SELECT * FROM todos");
+      setTodos(allTodos);
+    } catch (error) {
+      console.log("Error fetching todos", error);
+    }
+  };
+
+  const deleteTodo = async (id) => {
+    try {
+      const statement = await db.prepareAsync(`DELETE FROM todos WHERE id = ?`);
+      await statement.executeAsync([id]);
+      console.log("Todo deleted successfully");
+    } catch (error) {
+      console.log("Error deleting todo", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await Database.getTodos();
-        setTodos(data);
-      } catch (error) {
-        console.log("Error fetching todos", error);
-      }
-    };
-
-    fetchData();
+    getTodos();
   }, [isFocused]);
 
   const handleDeleteTodo = async (id) => {
-    await Database.deleteTodo(id);
-    const data = await Database.getTodos();
-    setTodos(data);
+    await deleteTodo(id);
+    await getTodos();
   };
 
   const renderTodoItem = ({ item }) => (

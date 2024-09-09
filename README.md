@@ -27,128 +27,49 @@ Install the required dependencies for SQLite and navigation:
 npm install expo-sqlite @react-navigation/native @react-navigation/stack
 ```
 
-## Step 3: Create the database
-
-Create a file named **`Database.js`** in the root of your project and add the following code:
-
-```jsx
-import * as SQLite from "expo-sqlite";
-
-const database_name = "TodoApp.db";
-const database_version = "1.0";
-const database_displayname = "Todo App Database";
-const database_size = 200000;
-
-const db = SQLite.openDatabase(
-  database_name,
-  database_version,
-  database_displayname,
-  database_size
-);
-
-const initDatabase = () => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      `CREATE TABLE IF NOT EXISTS todos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT,
-        description TEXT
-      );`,
-      [],
-      () => console.log("Database and table created successfully."),
-      (error) => console.log("Error occurred while creating the table.", error)
-    );
-  });
-};
-
-const getTodos = () => {
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "SELECT * FROM todos",
-        [],
-        (_, { rows }) => {
-          resolve(rows._array);
-        },
-        (_, error) => {
-          reject(error);
-        }
-      );
-    });
-  });
-};
-
-const deleteTodo = (id) => {
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "DELETE FROM todos WHERE id = ?",
-        [id],
-        () => {
-          resolve();
-        },
-        (_, error) => {
-          reject(error);
-        }
-      );
-    });
-  });
-};
-
-const addTodo = (title, description) => {
-  return new Promise((resolve, reject) => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "INSERT INTO todos (title, description) VALUES (?, ?)",
-        [title, description],
-        (_, { insertId }) => {
-          resolve(insertId);
-        },
-        (_, error) => {
-          reject(error);
-        }
-      );
-    });
-  });
-};
-
-const Database = {
-  initDatabase,
-  addTodo,
-  getTodos,
-  deleteTodo,
-};
-
-export default Database;
-```
-
-## Step 4: Set up navigation
+## Step 3: Set up App.js, Navigation and create the Database
 
 Create a new file named **`App.js`** in the root of your project and replace the default code with the following:
 
 ```jsx
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import React, { useEffect } from "react";
-import Database from "./Database";
+import { SQLiteProvider } from "expo-sqlite";
+import React from "react";
 import DetailScreen from "./screens/DetailScreen";
 import EntryScreen from "./screens/EntryScreen";
 import HomeScreen from "./screens/HomeScreen";
+import SearchScreen from "./screens/SearchScreen";
 const Stack = createStackNavigator();
 
-const App = () => {
-  useEffect(() => {
-    Database.initDatabase();
-  }, []);
+async function initializeDatabase(db) {
+  try {
+    await db.execAsync(`
+            PRAGMA journal_mode = WAL;
+            CREATE TABLE IF NOT EXISTS todos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            description TEXT
+            );
+        `);
+    console.log("Database initialised");
+  } catch (error) {
+    console.log("Error while initializing database : ", error);
+  }
+}
 
+const App = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Entry" component={EntryScreen} />
-        <Stack.Screen name="Detail" component={DetailScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SQLiteProvider databaseName="todos.db" onInit={initializeDatabase}>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Home">
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Entry" component={EntryScreen} />
+          <Stack.Screen name="Detail" component={DetailScreen} />
+          <Stack.Screen name="Search" component={SearchScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SQLiteProvider>
   );
 };
 
@@ -165,6 +86,7 @@ In **`HomeScreen.js`**, add the following code:
 
 ```jsx
 import { useIsFocused } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
@@ -173,29 +95,38 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Database from "../Database";
 
 const HomeScreen = ({ navigation }) => {
   const [todos, setTodos] = useState([]);
   const isFocused = useIsFocused();
+  const db = useSQLiteContext();
+
+  const getTodos = async () => {
+    try {
+      const allTodos = await db.getAllAsync("SELECT * FROM todos");
+      setTodos(allTodos);
+    } catch (error) {
+      console.log("Error fetching todos", error);
+    }
+  };
+
+  const deleteTodo = async (id) => {
+    try {
+      const statement = await db.prepareAsync(`DELETE FROM todos WHERE id = ?`);
+      await statement.executeAsync([id]);
+      console.log("Todo deleted successfully");
+    } catch (error) {
+      console.log("Error deleting todo", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await Database.getTodos();
-        setTodos(data);
-      } catch (error) {
-        console.log("Error fetching todos", error);
-      }
-    };
-
-    fetchData();
+    getTodos();
   }, [isFocused]);
 
   const handleDeleteTodo = async (id) => {
-    await Database.deleteTodo(id);
-    const data = await Database.getTodos();
-    setTodos(data);
+    await deleteTodo(id);
+    await getTodos();
   };
 
   const renderTodoItem = ({ item }) => (
@@ -269,6 +200,7 @@ export default HomeScreen;
 In **`EntryScreen.js`**, add the following code:
 
 ```jsx
+import { useSQLiteContext } from "expo-sqlite";
 import React, { useState } from "react";
 import {
   Alert,
@@ -278,9 +210,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Database from "../Database";
 
 const EntryScreen = ({ navigation }) => {
+  const db = useSQLiteContext();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
@@ -289,8 +221,20 @@ const EntryScreen = ({ navigation }) => {
       Alert.alert("Error", "Please enter title and description");
       return;
     }
-    await Database.addTodo(title, description);
+    await addTodo(title, description);
     navigation.goBack();
+  };
+
+  const addTodo = async (title, description) => {
+    try {
+      const statement = await db.prepareAsync(
+        `INSERT INTO todos (title, description) VALUES (?, ?)`
+      );
+      await statement.executeAsync([title, description]);
+      console.log("Todo added successfully");
+    } catch (error) {
+      console.log("Error adding todo", error);
+    }
   };
 
   return (

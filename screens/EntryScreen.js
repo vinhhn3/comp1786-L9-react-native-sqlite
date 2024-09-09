@@ -1,3 +1,4 @@
+import { useSQLiteContext } from "expo-sqlite";
 import React, { useState } from "react";
 import {
   Alert,
@@ -7,9 +8,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Database from "../Database";
 
 const EntryScreen = ({ navigation }) => {
+  const db = useSQLiteContext();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
@@ -18,8 +19,20 @@ const EntryScreen = ({ navigation }) => {
       Alert.alert("Error", "Please enter title and description");
       return;
     }
-    await Database.addTodo(title, description);
+    await addTodo(title, description);
     navigation.goBack();
+  };
+
+  const addTodo = async (title, description) => {
+    try {
+      const statement = await db.prepareAsync(
+        `INSERT INTO todos (title, description) VALUES (?, ?)`
+      );
+      await statement.executeAsync([title, description]);
+      console.log("Todo added successfully");
+    } catch (error) {
+      console.log("Error adding todo", error);
+    }
   };
 
   return (
