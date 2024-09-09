@@ -9,7 +9,7 @@ cd TodoApp
 
 The final folder structure will be like this:
 
-![Alt text](image-1.png)
+![1725868424850](image/README/1725868424850.png)
 
 The final Images of the application
 
@@ -17,7 +17,7 @@ The final Images of the application
 
 The following diagram shows how the application structure works with SQLite database and the responsibility of each file
 
-![Alt text](image-2.png)
+![1725868791448](image/README/1725868791448.png)
 
 ## Step 2: Install dependencies
 
